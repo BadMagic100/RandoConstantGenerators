@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System.Text;
 
 namespace RandoConstantGenerators
 {
@@ -68,7 +69,7 @@ namespace RandoConstantGenerators
         {
             context.RegisterForPostInitialization(i =>
             {
-                i.AddSource("GeneratorAttributes.g.cs", SourceText.From(AttributeSource));
+                i.AddSource("GeneratorAttributes.g.cs", SourceText.From(AttributeSource, Encoding.UTF8));
             });
         }
     }
