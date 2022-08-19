@@ -14,6 +14,11 @@ namespace RandoConstantGenerators
                 return;
             }
 
+            foreach (Diagnostic diag in mar.PreprocessorDiagnostics)
+            {
+                context.ReportDiagnostic(diag);
+            }
+
             foreach (var (type, attr) in mar.Classes)
             {
                 List<TypedConstant> args = attr.ConstructorArguments.ToList();
@@ -32,7 +37,7 @@ namespace RandoConstantGenerators
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            GenTimeDependencies.AddOnce();
+            //GenTimeDependencies.AddOnce();
             context.RegisterForSyntaxNotifications(() => new MarkerAttributeReceiver(AttributeGenerator.JsonConsts));
         }
     }

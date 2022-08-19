@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.Text;
+﻿using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text;
 using VerifyCS = CSharpSourceGeneratorVerifier<RandoConstantGenerators.JsonConstsGenerator>;
@@ -8,6 +9,76 @@ namespace RandoConstantGenerators.Tests
     [TestClass()]
     public class JsonConstsGeneratorTests
     {
+        [TestMethod()]
+        public async Task NotPartialStaticDiagnostic()
+        {
+            var code = @"
+namespace Test
+{
+    [RandoConstantGenerators.GenerateJsonConsts(""$[*]"", ""list.json"")]
+    public static class MakeMeSomeMagicConstants
+    {
+    }
+}
+";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { code, AttributeGenerator.AttributeSource },
+                    AdditionalFiles =
+                    {
+                        ("Resources\\list.json", "[ \"T1\", \"T2\" ]")
+                    },
+                    ExpectedDiagnostics =
+                    {
+                        new DiagnosticResult("RCG001", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+                            .WithSpan(5, 25, 5, 49)
+                    }
+                }
+            }.RunAsync();
+        }
+
+        [TestMethod()]
+        public async Task NoConstantsDiagnostic()
+        {
+            var code = @"
+namespace Test
+{
+    [RandoConstantGenerators.GenerateJsonConsts(""$[*]"", ""list.json"")]
+    public static partial class MakeMeSomeMagicConstants
+    {
+    }
+}
+";
+            var gen = @"
+namespace Test
+{
+    public static partial class MakeMeSomeMagicConstants
+    {
+    }
+}
+";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { code, AttributeGenerator.AttributeSource },
+                    GeneratedSources =
+                    {
+                        (typeof(JsonConstsGenerator), "MakeMeSomeMagicConstants.g.cs", SourceText.From(gen, Encoding.UTF8))
+                    },
+                    ExpectedDiagnostics =
+                    {
+                        new DiagnosticResult("RCG002", Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+                            .WithSpan(5, 33, 5, 57)
+                    }
+                }
+            }.RunAsync();
+        }
+
         [TestMethod()]
         public async Task SimpleGeneration()
         {

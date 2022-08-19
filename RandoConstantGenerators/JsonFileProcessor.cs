@@ -26,6 +26,14 @@ namespace RandoConstantGenerators
         private readonly string? dataPath;
         private readonly IEnumerable<string?> dataFiles;
 
+        private static readonly DiagnosticDescriptor NoConstantsFound = new(
+            id: "RCG002",
+            title: "No constants found",
+            messageFormat: "No constants found for the class '{0}'. This may mean your AdditionalFiles paths are invalid or you've provided incorrect JsonPath.",
+            category: "RandoConstantGenerators",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         private static string GetSafeName(string orig)
         {
             string val = orig.Replace("'", "").Replace('-', '_').Replace("[", "_").Replace("]", "");
@@ -92,6 +100,13 @@ namespace RandoConstantGenerators
 
         public void GenerateSources(INamedTypeSymbol type, IEnumerable<ConstData> consts, GeneratorExecutionContext context)
         {
+            if (!consts.Any())
+            {
+                SyntaxReference sr = type.DeclaringSyntaxReferences.First();
+                SyntaxToken classIdentifier = sr.GetSyntax().ChildTokens().First(t => t.IsKind(SyntaxKind.IdentifierToken));
+                context.ReportDiagnostic(Diagnostic.Create(NoConstantsFound, Location.Create(sr.SyntaxTree, classIdentifier.Span), type.ToDisplayString()));
+            }
+
             StringBuilder source = new($@"
 namespace {type.ContainingNamespace.ToDisplayString()}
 {{

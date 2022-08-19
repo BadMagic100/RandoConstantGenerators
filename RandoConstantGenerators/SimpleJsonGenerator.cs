@@ -5,21 +5,21 @@ using System.Linq;
 namespace RandoConstantGenerators
 {
     [Generator(LanguageNames.CSharp)]
-    public class TermGenerator : SimpleJsonGenerator
+    public sealed class TermGenerator : SimpleJsonGenerator
     {
         protected override string DataPath => "$[*]";
         protected override string MarkerAttributeName => AttributeGenerator.Terms;
     }
 
     [Generator(LanguageNames.CSharp)]
-    public class LogicDefNamesGenerator : SimpleJsonGenerator
+    public sealed class LogicDefNamesGenerator : SimpleJsonGenerator
     {
         protected override string DataPath => "$[*].name";
         protected override string MarkerAttributeName => AttributeGenerator.LogicDefNames;
     }
 
     [Generator(LanguageNames.CSharp)]
-    public class MacroNamesGenerator : SimpleJsonGenerator
+    public sealed class MacroNamesGenerator : SimpleJsonGenerator
     {
         protected override string DataPath => "$.*~";
         protected override string MarkerAttributeName => AttributeGenerator.MacroNames;
@@ -35,6 +35,11 @@ namespace RandoConstantGenerators
             if (context.SyntaxContextReceiver is not MarkerAttributeReceiver mar)
             {
                 return;
+            }
+
+            foreach (Diagnostic diag in mar.PreprocessorDiagnostics)
+            {
+                context.ReportDiagnostic(diag);
             }
 
             foreach (var (type, attr) in mar.Classes)
@@ -54,7 +59,6 @@ namespace RandoConstantGenerators
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            GenTimeDependencies.AddOnce();
             context.RegisterForSyntaxNotifications(() => new MarkerAttributeReceiver(MarkerAttributeName));
         }
     }

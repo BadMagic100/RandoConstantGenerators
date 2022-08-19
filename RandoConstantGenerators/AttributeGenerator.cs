@@ -15,8 +15,8 @@ namespace RandoConstantGenerators
         public const string AttributeSource = @$"
 namespace RandoConstantGenerators
 {{
-    [System.AttributeUsage(System.AttributeTargets.Class)]
-    internal class Generate{nameof(JsonConsts)}Attribute : System.Attribute
+    [System.AttributeUsage(System.AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    internal sealed class Generate{nameof(JsonConsts)}Attribute : System.Attribute
     {{
         public string[] FilePathSuffixes {{ get; }}
         public string DataPath {{ get; }}
@@ -28,7 +28,8 @@ namespace RandoConstantGenerators
         }}
     }}
 
-    internal class Generate{nameof(Terms)}Attribute : System.Attribute
+    [System.AttributeUsage(System.AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    internal sealed class Generate{nameof(Terms)}Attribute : System.Attribute
     {{
         public string[] FilePathSuffixes {{ get; }}
 
@@ -38,7 +39,8 @@ namespace RandoConstantGenerators
         }}
     }}
 
-    internal class Generate{nameof(LogicDefNames)}Attribute : System.Attribute
+    [System.AttributeUsage(System.AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    internal sealed class Generate{nameof(LogicDefNames)}Attribute : System.Attribute
     {{
         public string[] FilePathSuffixes {{ get; }}
 
@@ -48,7 +50,8 @@ namespace RandoConstantGenerators
         }}
     }}
 
-    internal class Generate{nameof(MacroNames)}Attribute : System.Attribute
+    [System.AttributeUsage(System.AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    internal sealed class Generate{nameof(MacroNames)}Attribute : System.Attribute
     {{
         public string[] FilePathSuffixes {{ get; }}
 
