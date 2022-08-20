@@ -318,5 +318,91 @@ namespace Test
                 }
             }.RunAsync();
         }
+
+        [TestMethod()]
+        public async Task SpecialCharacterKeys()
+        {
+            var code = @"
+namespace Test
+{
+    [RandoConstantGenerators.GenerateJsonConsts(""$.*~"", ""data.json"")]
+    public static partial class MakeMeSomeMagicConstants
+    {
+    }
+}
+";
+            var gen = @"
+namespace Test
+{
+    public static partial class MakeMeSomeMagicConstants
+    {
+        public const string Lever_Queens_Garden_Stag = ""Lever-Queen's_Garden_Stag"";
+        public const string Nailmasters_Oro_Mato = ""Nailmasters_Oro_&_Mato"";
+        public const string Cliffs_01_right4 = ""Cliffs_01[right4]"";
+        public const string Thing_With_Backslashes = ""Thing_\\With\\_Backslashes"";
+        public const string keywith_specialcharactersandescaped_ = ""key.with[special.characters.and].escaped_'"";
+    }
+}
+";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { code, AttributeGenerator.AttributeSource },
+                    AdditionalFiles =
+                    {
+                        ("Resources\\data.json", "{ \"Lever-Queen's_Garden_Stag\": \"Lever-Queen's_Garden_Stag\", \"Nailmasters_Oro_&_Mato\": \"Nailmasters_Oro_&_Mato\", \"Cliffs_01[right4]\": \"Cliffs_01[right4]\", \"Thing_\\\\With\\\\_Backslashes\": \"Thing_\\\\With\\\\_Backslashes\", \"key.with[special.characters.and].escaped_'\": \"key.with[special.characters.and].escaped_'\" }")
+                    },
+                    GeneratedSources =
+                    {
+                        (typeof(JsonConstsGenerator), "MakeMeSomeMagicConstants.g.cs", SourceText.From(gen, Encoding.UTF8))
+                    }
+                }
+            }.RunAsync();
+        }
+
+        [TestMethod()]
+        public async Task SpecialCharacterValues()
+        {
+            var code = @"
+namespace Test
+{
+    [RandoConstantGenerators.GenerateJsonConsts(""$.*"", ""data.json"")]
+    public static partial class MakeMeSomeMagicConstants
+    {
+    }
+}
+";
+            var gen = @"
+namespace Test
+{
+    public static partial class MakeMeSomeMagicConstants
+    {
+        public const string Lever_Queens_Garden_Stag = ""Lever-Queen's_Garden_Stag"";
+        public const string Nailmasters_Oro_Mato = ""Nailmasters_Oro_&_Mato"";
+        public const string Cliffs_01_right4 = ""Cliffs_01[right4]"";
+        public const string Thing_With_Backslashes = ""Thing_\\With\\_Backslashes"";
+        public const string keywith_specialcharactersandescaped_ = ""key.with[special.characters.and].escaped_'"";
+    }
+}
+";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { code, AttributeGenerator.AttributeSource },
+                    AdditionalFiles =
+                    {
+                        ("Resources\\data.json", "{ \"Lever-Queen's_Garden_Stag\": \"Lever-Queen's_Garden_Stag\", \"Nailmasters_Oro_&_Mato\": \"Nailmasters_Oro_&_Mato\", \"Cliffs_01[right4]\": \"Cliffs_01[right4]\", \"Thing_\\\\With\\\\_Backslashes\": \"Thing_\\\\With\\\\_Backslashes\", \"key.with[special.characters.and].escaped_'\": \"key.with[special.characters.and].escaped_'\" }")
+                    },
+                    GeneratedSources =
+                    {
+                        (typeof(JsonConstsGenerator), "MakeMeSomeMagicConstants.g.cs", SourceText.From(gen, Encoding.UTF8))
+                    }
+                }
+            }.RunAsync();
+        }
     }
 }

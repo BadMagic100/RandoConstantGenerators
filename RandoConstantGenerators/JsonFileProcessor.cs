@@ -3,10 +3,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RandoConstantGenerators
 {
@@ -18,6 +18,38 @@ namespace RandoConstantGenerators
         {
             Name = name;
             Value = value;
+        }
+    }
+
+    internal class TokenData
+    {
+        public readonly string tokenValue;
+        public readonly int index;
+        public readonly int len;
+
+        public TokenData(string tokenValue, int index, int len)
+        {
+            this.tokenValue = tokenValue;
+            this.index = index;
+            this.len = len;
+        }
+
+        public bool Intersects(TokenData other)
+        {
+            if (index >= other.index && index < other.index + other.len)
+            {
+                return true;
+            }
+            if (index + len > other.index && index + len <= other.index + other.len)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return $"{tokenValue} @ {index}-{index + len - 1}";
         }
     }
 
@@ -36,12 +68,28 @@ namespace RandoConstantGenerators
 
         private static string GetSafeName(string orig)
         {
-            string val = orig.Replace("'", "").Replace('-', '_').Replace("[", "_").Replace("]", "");
+            string val = orig;
+            foreach (char underscoreReplacement in " -[")
+            {
+                val = val.Replace(underscoreReplacement, '_');
+            }
+            val = Regex.Replace(val, @"\W", "");
+            val = Regex.Replace(val, @"_{2,}", "_");
             if (val.Length == 0 || char.IsDigit(val[0]))
             {
                 return '_' + val;
             }
             return val;
+        }
+
+        private static string EscapeBackslashes(string orig)
+        {
+            return orig.Replace("\\", "\\\\");
+        }
+
+        private static string UnescapePath(string orig)
+        {
+            return orig.Replace("\\'", "'").Replace("\\\\", "\\");
         }
 
         private static IEnumerable<string> StringTokens(IEnumerable<JToken> tokens, bool queryKeys)
@@ -50,8 +98,26 @@ namespace RandoConstantGenerators
             {
                 return tokens.Where(t => !string.IsNullOrEmpty(t.Path)).Select(t =>
                 {
-                    string[] pathParts = t.Path.Split(new[] { "[", "]", "." }, StringSplitOptions.RemoveEmptyEntries);
-                    return pathParts[pathParts.Length - 1];
+                    List<TokenData> indexerTokens = new();
+                    List<TokenData> namedTokens = new();
+                    foreach (Match m in Regex.Matches(t.Path, @"\[('.+?(?<!\\)'|\d+?)\]"))
+                    {
+                        string val = m.Groups[1].Value;
+                        if (val.StartsWith("'"))
+                        {
+                            val = UnescapePath(val.Substring(1, val.Length - 2));
+                        }
+                        indexerTokens.Add(new TokenData(val, m.Index, m.Length));
+                    }
+                    foreach (Match m in Regex.Matches(t.Path, @"(?<=^|\]\.|\.)(.+?)(?=$|[.\[])"))
+                    {
+                        string val = m.Groups[1].Value;
+                        namedTokens.Add(new TokenData(val, m.Index, m.Length));
+                    }
+                    IEnumerable<TokenData> orderedPathTokens = indexerTokens
+                        .Concat(namedTokens.Where(t => !indexerTokens.Any(u => t.Intersects(u))))
+                        .OrderBy(t => t.index);
+                    return orderedPathTokens.Last().tokenValue;
                 });
             }
             return tokens.Where(t => t.Type == JTokenType.String).Select(t => (string)t!);
@@ -92,7 +158,7 @@ namespace RandoConstantGenerators
                     queryPath = queryPath.Remove(dataPath.Length - 1);
                 }
                 IEnumerable<JToken> tokens = o.SelectTokens(queryPath);
-                result.AddRange(StringTokens(tokens, queryKeys).Select(t => new ConstData(GetSafeName(t), t)));
+                result.AddRange(StringTokens(tokens, queryKeys).Select(t => new ConstData(GetSafeName(t), EscapeBackslashes(t))));
             }
 
             return result;
