@@ -7,19 +7,19 @@ on:
 jobs:
   release:
 
-  runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-  steps:
-  - uses: actions/checkout@v3
-  - name: Setup .NET
-    uses: actions/setup-dotnet@v2
-  - name: Restore dependencies
-    run: dotnet restore
-  - name: Build
-    run: dotnet build -c Release --no-restore
-  - name: Test
-    run: dotnet test -c Release --no-build --verbosity normal
-  - name: Package
-    run: dotnet pack -c Release --no-build --output .
-  - name: Publish
-    run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build -c Release --no-restore
+    - name: Test
+      run: dotnet test -c Release --no-build --verbosity normal
+    - name: Package
+      run: dotnet pack -c Release --no-build --output .
+    - name: Publish
+      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.nuget_api_key}} --source https://api.nuget.org/v3/index.json
