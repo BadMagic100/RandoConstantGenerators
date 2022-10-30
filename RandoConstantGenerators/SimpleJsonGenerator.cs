@@ -12,6 +12,13 @@ namespace RandoConstantGenerators
     }
 
     [Generator(LanguageNames.CSharp)]
+    public sealed class TypedTermGenerator : SimpleJsonGenerator
+    {
+        protected override string DataPath => "$.*[*]";
+        override protected string MarkerAttributeName => AttributeGenerator.TypedTerms;
+    }
+
+    [Generator(LanguageNames.CSharp)]
     public sealed class LogicDefNamesGenerator : SimpleJsonGenerator
     {
         protected override string DataPath => "$[*].name";

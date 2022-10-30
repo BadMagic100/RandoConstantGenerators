@@ -9,6 +9,7 @@ namespace RandoConstantGenerators
     {
         public const string JsonConsts = $"RandoConstantGenerators.Generate{nameof(JsonConsts)}Attribute";
         public const string Terms = $"RandoConstantGenerators.Generate{nameof(Terms)}Attribute";
+        public const string TypedTerms = $"RandoConstantGenerators.Generate{nameof(TypedTerms)}Attribute";
         public const string LogicDefNames = $"RandoConstantGenerators.Generate{nameof(LogicDefNames)}Attribute";
         public const string MacroNames = $"RandoConstantGenerators.Generate{nameof(MacroNames)}Attribute";
 
@@ -34,6 +35,17 @@ namespace RandoConstantGenerators
         public string[] FilePathSuffixes {{ get; }}
 
         public Generate{nameof(Terms)}Attribute(params string[] FilePathSuffixes)
+        {{
+            this.FilePathSuffixes = FilePathSuffixes;
+        }}
+    }}
+
+    [System.AttributeUsage(System.AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    internal sealed class Generate{nameof(TypedTerms)}Attribute : System.Attribute
+    {{
+        public string[] FilePathSuffixes {{ get; }}
+
+        public Generate{nameof(TypedTerms)}Attribute(params string[] FilePathSuffixes)
         {{
             this.FilePathSuffixes = FilePathSuffixes;
         }}
