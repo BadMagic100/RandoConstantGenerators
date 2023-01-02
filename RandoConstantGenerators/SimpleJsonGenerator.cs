@@ -52,11 +52,7 @@ namespace RandoConstantGenerators
             foreach (var (type, attr) in mar.Classes)
             {
                 List<TypedConstant> args = attr.ConstructorArguments.ToList();
-                List<string?> values = args[0].Values.Select(c => c.Value as string).ToList();
-
-                IEnumerable<string?> datafiles = context.AdditionalFiles
-                    .Where(f => values.Where(v => v != null).Any(v => f.Path.EndsWith(v!)))
-                    .Select(t => t.GetText(context.CancellationToken)?.ToString());
+                IEnumerable<string?> datafiles = FileUtil.GetFiles(args[0].Values, context);
 
                 JsonFileProcessor proc = new(DataPath, datafiles);
                 IEnumerable<ConstData> consts = proc.CollectConsts();

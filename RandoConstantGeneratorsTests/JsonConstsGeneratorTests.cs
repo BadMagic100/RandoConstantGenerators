@@ -120,6 +120,47 @@ namespace Test
         }
 
         [TestMethod()]
+        public async Task NormalizedPathTest()
+        {
+            var code = @"
+namespace Test
+{
+    [RandoConstantGenerators.GenerateJsonConsts(""$[*]"", ""Resources/Logic/list.json"")]
+    public static partial class MakeMeSomeMagicConstants
+    {
+    }
+}
+";
+            var gen = @"
+namespace Test
+{
+    public static partial class MakeMeSomeMagicConstants
+    {
+        public const string T1 = ""T1"";
+        public const string T2 = ""T2"";
+    }
+}
+";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { code, AttributeGenerator.AttributeSource },
+                    AdditionalFiles =
+                    {
+                        ("Resources\\Logic\\list.json", "[ \"T1\", \"T2\" ]"),
+                        ("Resources\\IC\\list.json", "[ \"T3\", \"T4\" ]")
+                    },
+                    GeneratedSources =
+                    {
+                        (typeof(JsonConstsGenerator), "MakeMeSomeMagicConstants.g.cs", SourceText.From(gen, Encoding.UTF8))
+                    }
+                }
+            }.RunAsync();
+        }
+
+        [TestMethod()]
         public async Task DictionaryValueGeneration()
         {
             var code = @"
